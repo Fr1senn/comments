@@ -1,7 +1,11 @@
+﻿using commentsAPI.Entities.DTOs;
 using commentsAPI.Entities.Models;
 using commentsAPI.Entities.Requests;
+using commentsAPI.Entities.Shared;
+using commentsAPI.Entities.Shared.Filters;
 using commentsAPI.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
+
 namespace commentsAPI.Repositories
 {
     public class CommentRepository : ICommentRepository
@@ -13,6 +17,37 @@ namespace commentsAPI.Repositories
         {
             _context = context;
             _userRepository = userRepository;
+        }
+
+        public async Task<PaginatedResult<IEnumerable<CommentDTO>>> GetCommentsAsync(PaginationFilter filter)
+        {
+            var totalCount = await _context.Comments.CountAsync();
+            var query = _context.Comments
+                .AsNoTracking()
+                .Include(c => c.User)
+                .Select(c => new CommentDTO
+                {
+                    PublicId = c.PublicId,
+                    CommentText = c.CommentText,
+                    CreatedAt = c.CreatedAt,
+                    User = new UserDTO
+                    {
+                        Id = c.User.Id,
+                        UserName = c.User.UserName,
+                        Email = c.User.Email
+                    }
+                })
+                .OrderByDescending(c => c.CreatedAt)
+                .Skip(filter.Skip * filter.Take)
+                .Take(filter.Take);
+
+            var comments = await query.ToListAsync();
+
+            return new PaginatedResult<IEnumerable<CommentDTO>>
+            {
+                Result = comments,
+                TotalCount = totalCount
+            };
         }
 
         public async Task CreateCommentAsync(CommentRequest request)
