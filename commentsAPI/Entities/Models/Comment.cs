@@ -8,6 +8,8 @@ public partial class Comment : BaseEntity
 {
     public int UserId { get; set; }
 
+    public Guid PublicId { get; set; }
+
     public int? ParentCommentId { get; set; }
 
     public string CommentText { get; set; } = null!;
