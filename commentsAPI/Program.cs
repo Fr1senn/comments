@@ -10,6 +10,14 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<CommentsContext>();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(
+        "Cors",
+        builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()
+    );
+});
+
 
 var app = builder.Build();
 
@@ -18,6 +26,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors("Cors");
 
 app.UseMiddleware<ExceptionHandlerMiddleware>();
 
