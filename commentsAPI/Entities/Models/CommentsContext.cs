@@ -6,25 +6,14 @@ namespace commentsAPI.Entities.Models;
 
 public partial class CommentsContext : DbContext
 {
-    private readonly IConfiguration _configuration;
-
-    public CommentsContext(DbContextOptions<CommentsContext> options, IConfiguration configuration)
+    public CommentsContext(DbContextOptions<CommentsContext> options)
         : base(options)
     {
-        _configuration = configuration;
     }
 
     public virtual DbSet<Comment> Comments { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        if (optionsBuilder.IsConfigured)
-        {
-            optionsBuilder.UseSqlServer(_configuration.GetConnectionString("DefaultConnectionString"));
-        }
-    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
