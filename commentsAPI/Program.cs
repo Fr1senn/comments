@@ -1,5 +1,6 @@
 using commentsAPI.Entities.Models;
 using commentsAPI.Middlewares;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,7 +10,6 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddDbContext<CommentsContext>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(
@@ -17,6 +17,9 @@ builder.Services.AddCors(options =>
         builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()
     );
 });
+
+builder.Services.AddDbContext<CommentsContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnectionString")));
 
 
 var app = builder.Build();
