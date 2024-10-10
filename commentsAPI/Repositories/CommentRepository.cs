@@ -50,6 +50,64 @@ namespace commentsAPI.Repositories
             };
         }
 
+        public async Task<CommentDetailsDTO> GetCommentById(Guid id, PaginationFilter filter)
+        {
+            var comment = await _context.Comments
+                .AsNoTracking()
+                .Include(c => c.User)
+                .FirstOrDefaultAsync(c => c.PublicId == id);
+
+            if (comment == null)
+            {
+                throw new ApplicationException("Comment does not exist");
+            }
+
+            var childCommentsQuery = _context.Comments
+                .AsNoTracking()
+                .Include(c => c.User)
+                .Where(c => c.ParentCommentId == comment.Id);
+
+            var totalCount = await childCommentsQuery.CountAsync();
+
+            var childComments = await childCommentsQuery
+                .Select(c => new CommentDTO
+                {
+                    PublicId = c.PublicId,
+                    CommentText = c.CommentText,
+                    CreatedAt = c.CreatedAt,
+                    User = new UserDTO
+                    {
+                        Id = c.User.Id,
+                        UserName = c.User.UserName,
+                        Email = c.User.Email
+                    }
+                })
+                .OrderByDescending(c => c.CreatedAt)
+                .Skip(filter.Skip * filter.Take)
+                .Take(filter.Take)
+                .ToListAsync();
+
+            var commentDetailsDTO = new CommentDetailsDTO
+            {
+                Id = comment.PublicId,
+                CommentText = comment.CommentText,
+                CreatedAt = comment.CreatedAt,
+                User = new UserDTO
+                {
+                    Id = comment.User.Id,
+                    UserName = comment.User.UserName,
+                    Email = comment.User.Email
+                },
+                ChildComments = new PaginatedResult<IEnumerable<CommentDTO>>
+                {
+                    Result = childComments,
+                    TotalCount = totalCount
+                }
+            };
+
+            return commentDetailsDTO;
+        }
+
         public async Task CreateCommentAsync(CommentRequest request)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();

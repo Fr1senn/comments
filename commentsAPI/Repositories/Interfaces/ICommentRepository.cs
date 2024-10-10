@@ -8,6 +8,7 @@ namespace commentsAPI.Repositories.Interfaces
     public interface ICommentRepository
     {
         Task<PaginatedResult<IEnumerable<CommentDTO>>> GetCommentsAsync(PaginationFilter filter);
+        Task<CommentDetailsDTO> GetCommentById(Guid id, PaginationFilter filter);
         Task CreateCommentAsync(CommentRequest request);
     }
 }
